@@ -8,6 +8,10 @@ import operator
 def sigmoid( total ):
     return 1.0 / ( 1.0 + math.exp(- total) )
 
+def normalize(vec):
+    scale = math.sqrt( sum( [v*v for v in vec] ))
+    return [ v / scale for v in vec ]
+
 class Neuron:
     
     def __init__(self, weights, func=sigmoid):
@@ -76,7 +80,8 @@ class NeuronNetwork():
             L.num_inputs = neuronsNums[-2]
             for j in range(neuronsNums[-1]):
                 if len(layerDescription) == 4:
-                    weights = [ random.uniform(float(layerDescription[2]), float(layerDescription[3])) for i in range(L.num_inputs) ] 
+                    weights = [ random.uniform(float(layerDescription[2]), float(layerDescription[3])) 
+                                for i in range(L.num_inputs) ]
                     #bias
                     if(self.kohonen):
                         weights.append( 0.0 )
@@ -84,6 +89,7 @@ class NeuronNetwork():
                         weights.append( random.uniform(float(layerDescription[2]), float(layerDescription[3]))  )
                 else:
                     weights = [float(x) for x in f.readline().split()]
+                weigths = normalize(weights)
                 L.addNeuron(Neuron(weights, globals()[activationFun]))
             self.addLayer(L)
         f.close()
@@ -123,15 +129,14 @@ print NN.output(
 print
 NN.show()
 
-print 
 
+patterns = map(normalize, [[1, 0, 0, 0],
+                           [0, 1, 0, 0],
+                           [0, 0, 1, 0],
+                           [0, 0, 0, 1] ] )
 
 for i in range(10000):
-    for x in [[1, 0, 0, 0],
-              [0, 1, 0, 0],
-              [0, 0, 1, 0],
-              [0, 0, 0, 1] ]:
-
+    for x in patterns:        
         NN.output(x)
         NN.layers[-1].update_step(x)
         

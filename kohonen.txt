@@ -1,2 +1,2 @@
 4 1
-6 sigmoid 0 0.5
+5 sigmoid 0 0.5
