@@ -9,7 +9,7 @@ def sigmoid( total ):
     return 1.0 / ( 1.0 + math.exp(- total) )
 
 class Neuron:
-
+    
     def __init__(self, weights, func=sigmoid):
         self.weights  = weights
         self.func     = func
@@ -28,7 +28,8 @@ class Neuron:
 
 
 class Layer:
-
+    #num_inputs
+    #output
     def __init__(self):
         self.neurons  = []
 		
@@ -50,10 +51,11 @@ class NeuronNetwork:
             neuronsNums.append( int(layerDescription[0]) )
             activationFun = layerDescription[1]
 			
-            L = Layer()	            
+            L = Layer()
+            L.num_inputs = neuronsNums[-2]
             for j in range(neuronsNums[-1]):
                 if len(layerDescription) == 4:
-                    weights = [ random.uniform(float(layerDescription[2]), float(layerDescription[3])) for i in range(neuronsNums[-2]) ]
+                    weights = [ random.uniform(float(layerDescription[2]), float(layerDescription[3])) for i in range(L.num_inputs + 1) ]
                 else:
                     weights = [float(x) for x in f.readline().split()]
                 L.addNeuron(Neuron(weights, globals()[activationFun]))
@@ -64,7 +66,7 @@ class NeuronNetwork:
         self.layers.append(layer)
 		
     def show(self):
-        print "Inputs:", len(self.layers[0].neurons)
+        print "Inputs:", self.layers[0].num_inputs
         for idx, layer in enumerate(self.layers):
             print "Layer%d: %d neurons outval =" % (idx, len(layer.neurons)), layer.output   
             for idx, neuron in enumerate(layer.neurons):
@@ -72,7 +74,7 @@ class NeuronNetwork:
         print "Outputs:", len(self.layers[-1].neurons)
         
     def output(self, inputs):
-        if len(inputs) != len(self.layers[0].neurons):
+        if len(inputs) != self.layers[0].num_inputs:
             raise ValueError, 'wrong number of inputs'
         
 
