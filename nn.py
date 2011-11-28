@@ -55,7 +55,12 @@ class NeuronNetwork:
             L.num_inputs = neuronsNums[-2]
             for j in range(neuronsNums[-1]):
                 if len(layerDescription) == 4:
-                    weights = [ random.uniform(float(layerDescription[2]), float(layerDescription[3])) for i in range(L.num_inputs + 1) ]
+                    weights = [ random.uniform(float(layerDescription[2]), float(layerDescription[3])) for i in range(L.num_inputs) ] 
+                    #bias
+                    if(self.kohonen):
+                        weights.append( 0.0 )
+                    else:
+                        weights.append( random.uniform(float(layerDescription[2]), float(layerDescription[3]))  )
                 else:
                     weights = [float(x) for x in f.readline().split()]
                 L.addNeuron(Neuron(weights, globals()[activationFun]))
@@ -91,6 +96,8 @@ class NeuronNetwork:
 
 print
 NN = NeuronNetwork()
+NN.kohonen = True
+
 print NN.output(
 [float(x) for x in sys.argv[2:]])
 print
