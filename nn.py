@@ -12,6 +12,10 @@ def normalize(vec):
     scale = math.sqrt( sum( [v*v for v in vec] ))
     return [ v / scale for v in vec ]
 
+def dist(u, v):
+    sub2 = [ pow(ui - vi, 2) for ui, vi in zip(u, v) ]
+    return math.sqrt( sum( sub2 ))
+
 class Neuron:
     
     def __init__(self, weights, func=sigmoid):
@@ -47,17 +51,18 @@ class KohonenLayer(Layer):
         self.conscience = 0.5
         self.eta = 0.1
         
-    def winner(self):
-        max_idx, max_val = max(enumerate(self.output), key=operator.itemgetter(1))
-        return max_idx
+    def winner(self, x):
+        dists = [ dist(n.weights, x) for n in self.neurons ]
+        min_idx, min_val = min(enumerate(dists), key=operator.itemgetter(1))
+        return min_idx
 
     def update_step(self, x):
-        k_idx = self.winner()
+        k_idx = self.winner(x)
         k_neuron = self.neurons[ k_idx ] # winner neuron
         
         #update winner weights
-        k_neuron.weights = [ wi + self.eta * (xi - wi) for xi, wi in zip(x, k_neuron.weights) ]
-
+        k_neuron.weights = normalize( [ wi + self.eta * (xi - wi) for xi, wi in zip(x, k_neuron.weights) ] )
+        
 
 class NeuronNetwork():
     def __init__(self, kohonen = False):
