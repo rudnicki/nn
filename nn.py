@@ -3,7 +3,7 @@
 import sys
 import math
 import random
-
+import operator
 
 def sigmoid( total ):
     return 1.0 / ( 1.0 + math.exp(- total) )
@@ -28,20 +28,38 @@ class Neuron:
 
 
 class Layer:
-    #num_inputs
-    #output
+    #self.num_inputs
+    #self.output
     def __init__(self):
         self.neurons  = []
 		
     def addNeuron(self, neuron):
         self.neurons.append(neuron)
 
-        
-class NeuronNetwork:
-
+class KohonenLayer(Layer):
     def __init__(self):
+        #super(KohonenLayer, self).__init__()
+        Layer.__init__(self)
+        self.conscience = 0.5
+        self.eta = 0.1
+        
+    def winner(self):
+        max_idx, max_val = max(enumerate(self.output), key=operator.itemgetter(1))
+        return max_idx
+
+    def update_step(self, x):
+        k_idx = self.winner()
+        k_neuron = self.neurons[ k_idx ] # winner neuron
+        
+        #update winner weights
+        k_neuron.weights = [ wi + self.eta * (xi - wi) for xi, wi in zip(x, k_neuron.weights) ]
+
+
+class NeuronNetwork():
+    def __init__(self, kohonen = False):
         self.layers = []
-	
+	self.kohonen = kohonen
+
         f = open(sys.argv[1], 'r')
         
         [networkInputs, layersNum] = [int(x) for x in f.readline().split()]
@@ -50,8 +68,11 @@ class NeuronNetwork:
             layerDescription = f.readline().split()
             neuronsNums.append( int(layerDescription[0]) )
             activationFun = layerDescription[1]
-			
-            L = Layer()
+		
+            if(self.kohonen):
+                L = KohonenLayer()
+            else:
+                L = Layer()
             L.num_inputs = neuronsNums[-2]
             for j in range(neuronsNums[-1]):
                 if len(layerDescription) == 4:
@@ -95,10 +116,23 @@ class NeuronNetwork:
                 
 
 print
-NN = NeuronNetwork()
-NN.kohonen = True
+NN = NeuronNetwork(kohonen = True)
 
 print NN.output(
 [float(x) for x in sys.argv[2:]])
 print
+NN.show()
+
+print 
+
+
+for i in range(10000):
+    for x in [[1, 0, 0, 0],
+              [0, 1, 0, 0],
+              [0, 0, 1, 0],
+              [0, 0, 0, 1] ]:
+
+        NN.output(x)
+        NN.layers[-1].update_step(x)
+        
 NN.show()
