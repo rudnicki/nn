@@ -1,0 +1,39 @@
+1. Uruchomienie programu
+
+python nn.py plik_wejsciowy in1 in2 ... inn
+gdzie in1, in2, ... inn to wartoœci na wejœciu sieci
+
+Np:
+python nn.py test2.txt 0 0
+
+2. Format pliku wejœciowego o ustalonych wagach:
+
+liczba_wejsc liczba_warstw
+liczba_neuronow_warstwy_1 funkcja_aktywacji
+waga1 waga2 ... wagan bias
+liczba_neuronow_warstwy_2 funkcja_aktywacji
+waga1 waga2 ... wagan bias
+...
+liczba_neuronow_warstwy_n funkcja_aktywacji
+waga1 waga2 ... wagan bias
+
+Np. xor.txt
+2 2
+2 sigmoid
+-5.61 5.65 -2.93
+-4.84 4.6 2.5
+1 sigmoid
+-7.12 7.66 -3.26
+
+3. Format pliku wejœciowego o losowych wagach
+
+liczba_wejsc liczba_warstw
+liczba_neuronow_warstwy_1 funkcja_aktywacji min_waga max_waga
+liczba_neuronow_warstwy_2 funkcja_aktywacji min_waga max_waga
+...
+liczba_neuronow_warstwy_n funkcja_aktywacji min_waga max_waga
+
+Np. random.txt
+2 2
+2 sigmoid 0 1
+1 sigmoid 0 1
