@@ -180,7 +180,7 @@ print "\n<<Initial weights>>"
 NN.show()
 
 for i in range(32000):
-    x = pattern[i%4]
+    x = pattern[random.randint(0,len(pattern)-1)]
     NN.output(x)
     NN.layers[-1].learn_step(x)
 
@@ -194,4 +194,4 @@ print "input_vector", "---->", "output_vector", "---->", "winner id"
 for x in pattern:
     NN.output(x)
     max_idx, max_val = max(enumerate(NN.out()), key=operator.itemgetter(1))
-    print x, "---->", short(NN.out()), "---->", max_idx
+    print short(x), "---->", short(NN.out()), "---->", max_idx
