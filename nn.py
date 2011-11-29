@@ -8,11 +8,14 @@ import operator
 def sigmoid( total ):
     return 1.0 / ( 1.0 + math.exp(- total) )
 
+def linear(x):
+    return x
+	
 def normalize(vec):
     scale = math.sqrt( sum( [v*v for v in vec] ))
     return [ v / scale for v in vec ]
 
-def dist(u, v):
+def euk_dist(u, v):
     sub2 = [ pow(ui - vi, 2) for ui, vi in zip(u, v) ]
     return math.sqrt( sum( sub2 ))
 
@@ -27,7 +30,7 @@ class Neuron:
         self.bweight  = bweight
         self.func     = func
         #kohonen
-        self.romin = 0 #0.3
+        self.romin = 0.3 #0.3
         self.ro = 1
 
     def output(self, args):
@@ -44,10 +47,10 @@ class Neuron:
 
 
 class Layer:
-    #self.num_inputs
-    #self.output
     def __init__(self):
         self.neurons  = []
+        self.num_inputs = 0
+        self.output = []
 		
     def addNeuron(self, neuron):
         self.neurons.append(neuron)
@@ -58,9 +61,15 @@ class KohonenLayer(Layer):
         self.eta = 0.1
         
     def winner(self, x):
-        dists = [ dist(n.weights, x) for n in self.neurons if n.ro > n.romin]
+        dists = []
+        for n in self.neurons:
+            if n.ro > n.romin:
+                dists.append( euk_dist(n.weights, x) )
+            else:
+                dists.append( 6666666 )
+
         min_idx, min_val = min(enumerate(dists), key=operator.itemgetter(1))
-        
+		
         return min_idx
     
     def update_ro(self, win_idx):
@@ -68,21 +77,22 @@ class KohonenLayer(Layer):
             if n_idx == win_idx:
                 n.ro = n.ro - n.romin
             else:
-                n.ro = min( n.ro + 1.0/len(self.neurons), 1) #TODO what is n in 1/n for pi ?
+                n.ro = min( n.ro + 1.0/len(self.neurons), 1)
         
     def learn_step(self, x):
         k_idx = self.winner(x)
+		
         k_neuron = self.neurons[ k_idx ] # winner neuron
         
         #update winner weights and neurons.ro
-        k_neuron.weights = normalize( [ wi + self.eta * (xi - wi) for xi, wi in zip(x, k_neuron.weights) ] )        
+        k_neuron.weights = normalize([ wi + self.eta * (xi - wi) for xi, wi in zip(x, k_neuron.weights) ])
         self.update_ro(k_idx)
 
 
 class NeuronNetwork():
     def __init__(self, kohonen = False):
         self.layers = []
-	self.kohonen = kohonen
+        self.kohonen = kohonen
 
         f = open(sys.argv[1], 'r')
         
@@ -145,30 +155,34 @@ class NeuronNetwork():
 
 
 
-pattern1 = map(normalize, [[1, 0, 0, 0],
-                           [0, 1, 0, 0],
-                           [0, 0, 1, 0],
-                           [0, 0, 0, 1]] )
-
-pattern2 = map(normalize, [[1, 0, 0, 1],
-                           [0, 1, 1, 0],
-                           [0, 0, 0, 1],
-                           [1, 1, 1, 1]] ) 
-
+pattern = map(normalize,[ [0, 0, 1, 
+                           0, 0, 1, 
+						   0, 0, 1],
+						   
+                          [1, 0, 0, 
+						   0, 1, 0, 
+						   0, 0, 1],
+						   
+                          [1, 1, 1, 
+						   1, 0, 1, 
+						   1, 1, 1],
+						   
+                          [0, 1, 0,
+						   1, 0, 1, 
+						   0, 1, 0]
+					    ] 
+	        )
                 
 # create NeutralNetwork and pass input vector
 NN = NeuronNetwork(kohonen = True)
-NN.output([float(x) for x in sys.argv[2:]])
 
 print "\n<<Initial weights>>"
 NN.show()
 
-#select pattern for learn
-pattern = pattern1 
-
-for i in range(1000):
-    x = pattern[random.randint(0,len(pattern)-1)]
-    NN.output(x)
+for i in range(32000):
+    #x = pattern[random.randint(0,len(pattern)-1)]
+    x = pattern[0]
+    NN.output(pattern[i % 4])
     NN.layers[-1].learn_step(x)
 
 
