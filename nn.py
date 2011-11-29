@@ -119,6 +119,9 @@ class NeuronNetwork():
             for idx, neuron in enumerate(layer.neurons):
                 print "\tNeuron%d: weights =" % (idx), neuron.weights
         print "Outputs:", len(self.layers[-1].neurons)
+
+    def out(self):
+        return self.layers[-1].output
         
     def output(self, inputs):
         if len(inputs) != self.layers[0].num_inputs:
@@ -145,14 +148,33 @@ print
 NN.show()
 
 
-patterns = map(normalize, [[1, 0, 0, 0],
+pattern1 = map(normalize, [[1, 0, 0, 0],
                            [0, 1, 0, 0],
                            [0, 0, 1, 0],
                            [0, 0, 0, 1] ] )
 
-for i in range(10000):
-    for x in patterns:        
+
+pattern2 = map(normalize, [[1, 0, 0, 1],
+                          [0, 1, 1, 0],
+                          [0, 0, 0, 1],
+                          [1, 1, 1, 1] 
+                          ]) 
+
+
+#shuffle pattern for learn
+pattern = pattern1 #select pattern
+learnset = [ pattern[random.randint(0,len(pattern)-1)] for i in range(23) ]
+
+for i in range(1000):
+    for x in learnset:        
         NN.output(x)
-        NN.layers[-1].update_step(x)
-        
+        NN.layers[-1].learn_step(x)
+
 NN.show()
+        
+print "Validate:"
+for x in pattern:
+    NN.output(x)
+    max_idx, max_val = max(enumerate(NN.out()), key=operator.itemgetter(1))
+    print x, "---->", NN.out(), "---->", max_idx
+
