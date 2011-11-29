@@ -59,7 +59,7 @@ class KohonenLayer(Layer):
     def __init__(self, dim=1):
         Layer.__init__(self)
         self.eta  = 0.1
-        self.neig = 1
+        self.neig = 0
         self.dim  = dim
 
     def size(self):
@@ -97,7 +97,7 @@ class KohonenLayer(Layer):
             if n_idx == win_idx:
                 n.ro = n.ro - n.romin
             else:
-                n.ro = min( n.ro + 1.0/len(self.neurons), 1) #TODO what is n in 1/n for pi ?
+                n.ro = min( n.ro + 1.0/len(self.neurons), 1)
         
     def learn_step(self, x):
         k_idx = self.winner(x)
@@ -111,11 +111,11 @@ class KohonenLayer(Layer):
 
 
 class NeuronNetwork():
-    def __init__(self, kohonen = False):
+    def __init__(self, filename, kohonen = False):
         self.layers = []
         self.kohonen = kohonen
 
-        f = open(sys.argv[1], 'r')
+        f = open(filename, 'r')
         
         [networkInputs, layersNum] = [int(x) for x in f.readline().split()]
         neuronsNums = [networkInputs]
@@ -160,11 +160,13 @@ class NeuronNetwork():
     def out(self):
         return self.layers[-1].output
         
-    def output(self, inputs):
+    def output(self, inputs, normalizeInputs=False):
         if len(inputs) != self.layers[0].num_inputs:
             raise ValueError, 'wrong number of inputs'
         
-
+        if(normalizeInputs == True):
+            inputs = map(normalize, [inputs])[0]
+		
         for lid, layer in enumerate(self.layers):
             outputs = []
             for n in layer.neurons:
@@ -174,46 +176,32 @@ class NeuronNetwork():
     
         return self.layers[-1].output
 
+    def learn(self, pattern, epochEtas, iterationsPerEpoch, romin, neig, dim):
+		kohonenLayer = self.layers[-1]
+		kohonenLayer.neig = neig
+		kohonenLayer.dim = dim
+		for neuron in kohonenLayer.neurons:
+			neuron.romin = romin
 
+		pattern = map(normalize, pattern)
+		for epochEta in epochEtas:
+			for i in range(iterationsPerEpoch):
+				kohonenLayer.eta = epochEta
+				x = pattern[random.randint(0,len(pattern)-1)]
+				self.output(x)
+				kohonenLayer.learn_step(x)
 
-pattern = map(normalize,[ [0, 0, 1, 
-                           0, 0, 1, 
-						   0, 0, 1],
-						   
-                          [1, 0, 0, 
-						   0, 1, 0, 
-						   0, 0, 1],
-						   
-                          [1, 1, 1, 
-						   1, 0, 1, 
-						   1, 1, 1],
-						   
-                          [0, 1, 0,
-						   1, 0, 1, 
-						   0, 1, 0]
-					    ] 
-	        )
-
-                
-# create NeutralNetwork and pass input vector
-NN = NeuronNetwork(kohonen = True)
-
-print "\n<<Initial weights>>"
-NN.show()
-
-for i in range(32000):
-    x = pattern[random.randint(0,len(pattern)-1)]
-    NN.output(x)
-    NN.layers[-1].learn_step(x)
-
-
-print "\n<<Weights after learning>>"
-NN.show()
-
-#test pattern vectors
-print "\n<<Validate>>"
-print "input_vector", "---->", "output_vector", "---->", "winner id"
-for x in pattern:
-    NN.output(x)
-    max_idx, max_val = max(enumerate(NN.out()), key=operator.itemgetter(1))
-    print short(x), "---->", short(NN.out()), "---->", max_idx
+    def save(self, filename):
+		f = open(filename, 'w')
+		f.write(str(len(self.layers[0].neurons[0].weights)) + " " + str(len(self.layers)))
+		f.write("\n")
+		for layer in self.layers:
+			f.write(str(len(layer.neurons)) + " " + layer.neurons[0].func.__name__)
+			f.write("\n")
+			for neuron in layer.neurons:
+				for weight in neuron.weights:
+					f.write(str(weight) + " ")
+				f.write(str(neuron.bweight))
+				f.write("\n")
+			f.write("\n")
+		f.close()
