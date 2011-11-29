@@ -16,6 +16,10 @@ def dist(u, v):
     sub2 = [ pow(ui - vi, 2) for ui, vi in zip(u, v) ]
     return math.sqrt( sum( sub2 ))
 
+def short(vec):
+    nums = ' '.join(["%.2f" % (vi) for vi in vec ])
+    return "[" + nums + "]"
+    
 class Neuron:
     
     def __init__(self, weights, func=sigmoid, bweight = 0):
@@ -117,9 +121,9 @@ class NeuronNetwork():
     def show(self):
         print "Inputs:", self.layers[0].num_inputs
         for idx, layer in enumerate(self.layers):
-            print "Layer%d: %d neurons outval =" % (idx, len(layer.neurons)), layer.output   
+            print "Layer%d: %d neurons outval =" % (idx, len(layer.neurons)), short(layer.output)
             for idx, neuron in enumerate(layer.neurons):
-                print "\tNeuron%d: weights =" % (idx), neuron.weights, "bias_weight=",neuron.bweight
+                print "\tNeuron%d: weights =" % (idx), short(neuron.weights), "bias_weight=",neuron.bweight
         print "Outputs:", len(self.layers[-1].neurons)
 
     def out(self):
@@ -177,6 +181,6 @@ print "input_vector", "---->", "output_vector", "---->", "winner id"
 for x in pattern:
     NN.output(x)
     max_idx, max_val = max(enumerate(NN.out()), key=operator.itemgetter(1))
-    print x, "---->", NN.out(), "---->", max_idx
+    print x, "---->", short(NN.out()), "---->", max_idx
 
 
