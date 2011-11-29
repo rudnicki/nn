@@ -21,6 +21,9 @@ class Neuron:
     def __init__(self, weights, func=sigmoid):
         self.weights  = weights
         self.func     = func
+        #kohonen
+        self.pmin = 0 #0.75
+        self.p = 1
 
     def output(self, args):
         # bias self.weights[-1]
@@ -48,21 +51,28 @@ class KohonenLayer(Layer):
     def __init__(self):
         #super(KohonenLayer, self).__init__()
         Layer.__init__(self)
-        self.conscience = 0.5
         self.eta = 0.1
         
     def winner(self, x):
-        dists = [ dist(n.weights, x) for n in self.neurons ]
+        dists = [ dist(n.weights, x) for n in self.neurons if n.p > n.pmin]
         min_idx, min_val = min(enumerate(dists), key=operator.itemgetter(1))
         return min_idx
-
-    def update_step(self, x):
+    
+    def update_p(self,win_idx):
+        for n_idx, n in enumerate(self.neurons):
+            if n_idx == win_idx:
+                n.p = n.p - n.pmin
+            else:
+                n.p = n.p + 1.0/len(self.neurons) #TODO what is n in 1/n for pi ?
+        
+    def learn_step(self, x):
         k_idx = self.winner(x)
         k_neuron = self.neurons[ k_idx ] # winner neuron
         
         #update winner weights
         k_neuron.weights = normalize( [ wi + self.eta * (xi - wi) for xi, wi in zip(x, k_neuron.weights) ] )
-        
+        self.update_p(k_idx)
+
 
 class NeuronNetwork():
     def __init__(self, kohonen = False):
