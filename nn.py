@@ -23,7 +23,7 @@ class Neuron:
         self.bweight  = bweight
         self.func     = func
         #kohonen
-        self.romin = 0 #0.75
+        self.romin = 0 #0.3
         self.ro = 1
 
     def output(self, args):
@@ -56,6 +56,7 @@ class KohonenLayer(Layer):
     def winner(self, x):
         dists = [ dist(n.weights, x) for n in self.neurons if n.ro > n.romin]
         min_idx, min_val = min(enumerate(dists), key=operator.itemgetter(1))
+        
         return min_idx
     
     def update_ro(self, win_idx):
@@ -158,14 +159,13 @@ NN.output([float(x) for x in sys.argv[2:]])
 print "\n<<Initial weights>>"
 NN.show()
 
-#shuffle pattern for learn
+#select pattern for learn
 pattern = pattern1 
-learnset = [ pattern[random.randint(0,len(pattern)-1)] for i in range(23) ]
 
 for i in range(1000):
-    for x in learnset:        
-        NN.output(x)
-        NN.layers[-1].learn_step(x)
+    x = pattern[random.randint(0,len(pattern)-1)]
+    NN.output(x)
+    NN.layers[-1].learn_step(x)
 
 
 print "\n<<Weights after learning>>"
