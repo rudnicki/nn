@@ -56,10 +56,19 @@ class Layer:
         self.neurons.append(neuron)
 
 class KohonenLayer(Layer):
-    def __init__(self):
+    def __init__(self, dim=1):
         Layer.__init__(self)
-        self.eta = 0.1
-        
+        self.eta  = 0.1
+        self.neig = 1
+        self.dim  = dim
+
+    def size(self):
+        if(self.dim == 1):
+            return len(self.neurons)
+        if(self.dim == 2):
+            return math.sqrt(len(self.neurons))
+    ssize = property(size) # ssize - side_size
+
     def winner(self, x):
         dists = []
         for n in self.neurons:
@@ -71,7 +80,18 @@ class KohonenLayer(Layer):
         min_idx, min_val = min(enumerate(dists), key=operator.itemgetter(1))
         
         return min_idx
-    
+
+    def is_neig(self, win_id, other_id):
+        if win_id == other_id:
+            return 0.5
+        elif abs(win_id - other_id) <= self.neig:
+            return 0.5
+        # 2dimension case
+        elif (win_id % self.ssize == other_id % self.ssize) and ( abs(win_id - other_id) <= self.ssize * self.neig):
+            return 1
+        else:
+            return 0
+
     def update_ro(self, win_idx):
         for n_idx, n in enumerate(self.neurons):
             if n_idx == win_idx:
@@ -83,8 +103,10 @@ class KohonenLayer(Layer):
         k_idx = self.winner(x)
         k_neuron = self.neurons[ k_idx ] # winner neuron
         
-        #update winner weights and neurons.ro
-        k_neuron.weights = normalize( [ wi + self.eta * (xi - wi) for xi, wi in zip(x, k_neuron.weights) ] )
+        #update winner and neighbours
+        for n_id, n in enumerate(self.neurons):
+            new_weights = [ wi + self.is_neig(k_idx, n_id) * self.eta * (xi - wi) for xi, wi in zip(x, n.weights) ]
+            n.weights   = normalize( new_weights )
         self.update_ro(k_idx)
 
 
