@@ -18,8 +18,9 @@ def dist(u, v):
 
 class Neuron:
     
-    def __init__(self, weights, func=sigmoid):
+    def __init__(self, weights, func=sigmoid, bweight = 0):
         self.weights  = weights
+        self.bweight  = bweight
         self.func     = func
         #kohonen
         self.romin = 0 #0.75
@@ -28,7 +29,7 @@ class Neuron:
     def output(self, args):
         # bias self.weights[-1]
         total  = sum( [ self.weights[i] * args[i] for i in range(len(args)) ] )
-        total += (-1) * self.weights[-1]
+        total += (-1) * self.bweight
         return self.function(total)
     
     def function(self, arg):
@@ -58,7 +59,7 @@ class KohonenLayer(Layer):
         min_idx, min_val = min(enumerate(dists), key=operator.itemgetter(1))
         return min_idx
     
-    def update_ro(self,win_idx):
+    def update_ro(self, win_idx):
         for n_idx, n in enumerate(self.neurons):
             if n_idx == win_idx:
                 n.ro = n.ro - n.romin
@@ -99,13 +100,14 @@ class NeuronNetwork():
                                 for i in range(L.num_inputs) ]
                     #bias
                     if(self.kohonen):
-                        weights.append( 0.0 )
+                        bweight = 0.0
+                        weigths = normalize(weights)
                     else:
-                        weights.append( random.uniform(float(layerDescription[2]), float(layerDescription[3]))  )
+                        bweigth = random.uniform(float(layerDescription[2]), float(layerDescription[3]))
                 else:
                     weights = [float(x) for x in f.readline().split()]
-                weigths = normalize(weights)
-                L.addNeuron(Neuron(weights, globals()[activationFun]))
+                    bweight = weights.pop() # last element is bias
+                L.addNeuron(Neuron(weights, globals()[activationFun], bweight))
             self.addLayer(L)
         f.close()
 
@@ -117,7 +119,7 @@ class NeuronNetwork():
         for idx, layer in enumerate(self.layers):
             print "Layer%d: %d neurons outval =" % (idx, len(layer.neurons)), layer.output   
             for idx, neuron in enumerate(layer.neurons):
-                print "\tNeuron%d: weights =" % (idx), neuron.weights
+                print "\tNeuron%d: weights =" % (idx), neuron.weights, "bias_weight=",neuron.bweight
         print "Outputs:", len(self.layers[-1].neurons)
 
     def out(self):
