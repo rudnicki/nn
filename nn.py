@@ -137,32 +137,28 @@ class NeuronNetwork():
     
         return self.layers[-1].output
 
-                
-
-print
-NN = NeuronNetwork(kohonen = True)
-
-print NN.output(
-[float(x) for x in sys.argv[2:]])
-print
-NN.show()
 
 
 pattern1 = map(normalize, [[1, 0, 0, 0],
                            [0, 1, 0, 0],
                            [0, 0, 1, 0],
-                           [0, 0, 0, 1] ] )
-
+                           [0, 0, 0, 1]] )
 
 pattern2 = map(normalize, [[1, 0, 0, 1],
-                          [0, 1, 1, 0],
-                          [0, 0, 0, 1],
-                          [1, 1, 1, 1] 
-                          ]) 
+                           [0, 1, 1, 0],
+                           [0, 0, 0, 1],
+                           [1, 1, 1, 1]] ) 
 
+                
+# create NeutralNetwork and pass input vector
+NN = NeuronNetwork(kohonen = True)
+NN.output([float(x) for x in sys.argv[2:]])
+
+print "\n<<Initial weights>>"
+NN.show()
 
 #shuffle pattern for learn
-pattern = pattern1 #select pattern
+pattern = pattern1 
 learnset = [ pattern[random.randint(0,len(pattern)-1)] for i in range(23) ]
 
 for i in range(1000):
@@ -170,11 +166,16 @@ for i in range(1000):
         NN.output(x)
         NN.layers[-1].learn_step(x)
 
+
+print "\n<<Weights after learning>>"
 NN.show()
-        
-print "Validate:"
+
+#test pattern vectors        
+print "\n<<Validate>>"
+print "input_vector", "---->", "output_vector", "---->", "winner id"
 for x in pattern:
     NN.output(x)
     max_idx, max_val = max(enumerate(NN.out()), key=operator.itemgetter(1))
     print x, "---->", NN.out(), "---->", max_idx
+
 
