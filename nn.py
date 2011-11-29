@@ -15,7 +15,7 @@ def normalize(vec):
     scale = math.sqrt( sum( [v*v for v in vec] ))
     return [ v / scale for v in vec ]
 
-def dist(u, v):
+def euk_dist(u, v):
     sub2 = [ pow(ui - vi, 2) for ui, vi in zip(u, v) ]
     return math.sqrt( sum( sub2 ))
 
@@ -61,7 +61,13 @@ class KohonenLayer(Layer):
         self.eta = 0.1
         
     def winner(self, x):
-        dists = [ dist(n.weights, x) for n in self.neurons if n.ro > n.romin]
+        dists = []
+        for n in self.neurons:
+            if n.ro > n.romin:
+                dists.append( euk_dist(n.weights, x) )
+            else:
+                dists.append( float("inf") )
+        
         min_idx, min_val = min(enumerate(dists), key=operator.itemgetter(1))
         
         return min_idx
