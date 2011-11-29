@@ -50,7 +50,6 @@ class Layer:
 
 class KohonenLayer(Layer):
     def __init__(self):
-        #super(KohonenLayer, self).__init__()
         Layer.__init__(self)
         self.eta = 0.1
         
@@ -70,8 +69,8 @@ class KohonenLayer(Layer):
         k_idx = self.winner(x)
         k_neuron = self.neurons[ k_idx ] # winner neuron
         
-        #update winner weights
-        k_neuron.weights = normalize( [ wi + self.eta * (xi - wi) for xi, wi in zip(x, k_neuron.weights) ] )
+        #update winner weights and neurons.ro
+        k_neuron.weights = normalize( [ wi + self.eta * (xi - wi) for xi, wi in zip(x, k_neuron.weights) ] )        
         self.update_ro(k_idx)
 
 
