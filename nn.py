@@ -5,6 +5,9 @@ import math
 import random
 import operator
 
+def linear( total ):
+    return total
+
 def sigmoid( total ):
     return 1.0 / ( 1.0 + math.exp(- total) )
 

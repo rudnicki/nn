@@ -1,2 +1,2 @@
 4 1
-8 sigmoid 0 0.5
+4 linear 0 0.5
