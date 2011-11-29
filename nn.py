@@ -63,7 +63,7 @@ class KohonenLayer(Layer):
             if n_idx == win_idx:
                 n.p = n.p - n.pmin
             else:
-                n.p = n.p + 1.0/len(self.neurons) #TODO what is n in 1/n for pi ?
+                n.p = min( n.p + 1.0/len(self.neurons), 1) #TODO what is n in 1/n for pi ?
         
     def learn_step(self, x):
         k_idx = self.winner(x)
