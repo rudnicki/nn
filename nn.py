@@ -30,7 +30,7 @@ class Neuron:
         self.bweight = bweight
         self.func = func
         #kohonen
-        self.romin = 0 #0.3
+        self.romin = 0.5
         self.ro = 1
 
     def output(self, args):
@@ -47,10 +47,10 @@ class Neuron:
 
 
 class Layer:
-    #self.num_inputs
-    #self.output
     def __init__(self):
         self.neurons = []
+        self.num_inputs = 0
+        self.output = []
 
     def addNeuron(self, neuron):
         self.neurons.append(neuron)
@@ -91,7 +91,7 @@ class KohonenLayer(Layer):
 class NeuronNetwork():
     def __init__(self, kohonen = False):
         self.layers = []
-self.kohonen = kohonen
+        self.kohonen = kohonen
 
         f = open(sys.argv[1], 'r')
         
@@ -154,29 +154,33 @@ self.kohonen = kohonen
 
 
 
-pattern1 = map(normalize, [[1, 0, 0, 0],
-                           [0, 1, 0, 0],
-                           [0, 0, 1, 0],
-                           [0, 0, 0, 1]] )
-
-pattern2 = map(normalize, [[1, 0, 0, 1],
-                           [0, 1, 1, 0],
-                           [0, 0, 0, 1],
-                           [1, 1, 1, 1]] )
+pattern = map(normalize,[ [0, 0, 1, 
+                           0, 0, 1, 
+						   0, 0, 1],
+						   
+                          [1, 0, 0, 
+						   0, 1, 0, 
+						   0, 0, 1],
+						   
+                          [1, 1, 1, 
+						   1, 0, 1, 
+						   1, 1, 1],
+						   
+                          [0, 1, 0,
+						   1, 0, 1, 
+						   0, 1, 0]
+					    ] 
+	        )
 
                 
 # create NeutralNetwork and pass input vector
 NN = NeuronNetwork(kohonen = True)
-NN.output([float(x) for x in sys.argv[2:]])
 
 print "\n<<Initial weights>>"
 NN.show()
 
-#select pattern for learn
-pattern = pattern1
-
-for i in range(1000):
-    x = pattern[random.randint(0,len(pattern)-1)]
+for i in range(32000):
+    x = pattern[i%4]
     NN.output(x)
     NN.layers[-1].learn_step(x)
 
