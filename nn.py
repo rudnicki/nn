@@ -34,7 +34,6 @@ class Neuron:
         self.ro = 1
 
     def output(self, args):
-        # bias self.weights[-1]
         total = sum( [ self.weights[i] * args[i] for i in range(len(args)) ] )
         total += (-1) * self.bweight
         return self.function(total)
@@ -176,32 +175,36 @@ class NeuronNetwork():
     
         return self.layers[-1].output
 
-    def learn(self, pattern, epochEtas, iterationsPerEpoch, romin, neig, dim):
-		kohonenLayer = self.layers[-1]
-		kohonenLayer.neig = neig
-		kohonenLayer.dim = dim
-		for neuron in kohonenLayer.neurons:
-			neuron.romin = romin
+    def learn(self, pattern, epochEtas, iterationsPerEpoch, romin, epochNeigs, dim):
+        kohonenLayer = self.layers[-1]
+        kohonenLayer.dim = dim
+        kohonenLayer.romin = romin
 
-		pattern = map(normalize, pattern)
-		for epochEta in epochEtas:
-			for i in range(iterationsPerEpoch):
-				kohonenLayer.eta = epochEta
-				x = pattern[random.randint(0,len(pattern)-1)]
-				self.output(x)
-				kohonenLayer.learn_step(x)
+        pattern = map(normalize, pattern)
+        for epochEta, epochNeig in zip(epochEtas, epochNeigs):
+            for i in range(iterationsPerEpoch):
+                kohonenLayer.eta = epochEta
+                kohonenLayer.neig = epochNeig
+                #x = pattern[random.randint(0,len(pattern)-1)]
+                x = pattern[i % len(pattern)]
+                self.output(x)
+                kohonenLayer.learn_step(x)
 
     def save(self, filename):
-		f = open(filename, 'w')
-		f.write(str(len(self.layers[0].neurons[0].weights)) + " " + str(len(self.layers)))
-		f.write("\n")
-		for layer in self.layers:
-			f.write(str(len(layer.neurons)) + " " + layer.neurons[0].func.__name__)
-			f.write("\n")
-			for neuron in layer.neurons:
-				for weight in neuron.weights:
-					f.write(str(weight) + " ")
-				f.write(str(neuron.bweight))
-				f.write("\n")
-			f.write("\n")
-		f.close()
+        f = open(filename, 'w')
+        f.write(str(len(self.layers[0].neurons[0].weights)) + " " + str(len(self.layers)))
+        f.write("\n")
+        for layer in self.layers:
+            f.write(str(len(layer.neurons)) + " " + layer.neurons[0].func.__name__)
+            f.write("\n")
+            for neuron in layer.neurons:
+                for weight in neuron.weights:
+                    f.write(str(weight) + " ")
+                f.write(str(neuron.bweight))
+                f.write("\n")
+            f.write("\n")
+        f.close()
+		
+    def find_winner(self):
+        return max(enumerate(self.out()), key=operator.itemgetter(1))
+

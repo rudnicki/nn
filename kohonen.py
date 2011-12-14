@@ -4,20 +4,20 @@ from nn import *
 
 pattern = [[0, 0, 1, 
             0, 0, 1, 
-			0, 0, 1],
-						   
-           [1, 0, 0, 
-			0, 1, 0, 
-			0, 0, 1],
-						   
-           [1, 1, 1, 
-			1, 0, 1, 
-			1, 1, 1],
-						   
+            0, 0, 1],
+           
            [0, 1, 0,
-			1, 0, 1, 
-			0, 1, 0]
-		] 
+            1, 1, 1, 
+            0, 1, 0],
+           
+           [1, 1, 1, 
+            1, 0, 1, 
+            1, 1, 1],
+           
+           [1, 0, 0, 
+            0, 1, 0, 
+            0, 0, 1]
+           ] 
 
 NN = NeuronNetwork(sys.argv[1], kohonen = True)
 
@@ -26,11 +26,11 @@ NN.show()
 
 #learning the pattern
 epochEtas = [0.8, 0.6, 0.4, 0.1]
-iterationsPerEpoch = 2000
-roMin = 0.3
-neighbourhood = 0
+epochNeig = [0, 0, 0, 0]
+iterationsPerEpoch = 10
+roMin = 0.0
 neighbourhoodDim = 1
-NN.learn(pattern, epochEtas, iterationsPerEpoch, roMin, neighbourhood, neighbourhoodDim)
+NN.learn(pattern, epochEtas, iterationsPerEpoch, roMin, epochNeig, neighbourhoodDim)
 
 print "\n<<Weights after learning>>"
 NN.show()
@@ -43,5 +43,31 @@ print "input_vector", "---->", "output_vector", "---->", "winner id"
 
 for x in pattern:
     NN.output(x, True)
-    max_idx, max_val = max(enumerate(NN.out()), key=operator.itemgetter(1))
+    max_idx, max_val = NN.find_winner()
     print short(x), "---->", short(NN.out()), "---->", max_idx
+	
+test_pattern = [[1, 0, 1, 
+                 0, 0, 1, 
+                 0, 0, 1],
+                
+                [0, 0, 0, 
+                 1, 1, 1, 
+                 0, 1, 0],
+                
+                [1, 1, 1, 
+                 1, 1, 1, 
+                 1, 1, 1],
+                
+                [1, 0, 0,
+                 1, 1, 0, 
+                 0, 0, 1]
+                ] 
+
+print "\n<<Test>>"
+print "input_vector", "---->", "output_vector", "---->", "winner id"
+
+for x in test_pattern:
+    NN.output(x, True)
+    max_idx, max_val = NN.find_winner()
+    print short(x), "---->", short(NN.out()), "---->", max_idx
+
