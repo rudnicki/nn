@@ -13,7 +13,10 @@ def sigmoid( total ):
 
 def normalize(vec):
     scale = math.sqrt( sum( [v*v for v in vec] ))
-    return [ v / scale for v in vec ]
+    if scale==0:
+        return vec
+    else:
+        return [ v / scale for v in vec ]
 
 def euk_dist(u, v):
     sub2 = [ pow(ui - vi, 2) for ui, vi in zip(u, v) ]
@@ -82,12 +85,12 @@ class KohonenLayer(Layer):
 
     def is_neig(self, win_id, other_id):
         if win_id == other_id:
-            return 0.5
+            return 1
         elif abs(win_id - other_id) <= self.neig:
             return 0.5
         # 2dimension case
         elif (win_id % self.ssize == other_id % self.ssize) and ( abs(win_id - other_id) <= self.ssize * self.neig):
-            return 1
+            return 0.5
         else:
             return 0
 
@@ -140,7 +143,7 @@ class NeuronNetwork():
                         bweigth = random.uniform(float(layerDescription[2]), float(layerDescription[3]))
                 else:
                     weights = [float(x) for x in f.readline().split()]
-                    bweight = weights.pop() # last element is bias
+                    bweight = weights.pop()
                 L.addNeuron(Neuron(weights, globals()[activationFun], bweight))
             self.addLayer(L)
         f.close()
@@ -165,7 +168,6 @@ class NeuronNetwork():
         
         if(normalizeInputs == True):
             inputs = map(normalize, [inputs])[0]
-		
         for lid, layer in enumerate(self.layers):
             outputs = []
             for n in layer.neurons:
