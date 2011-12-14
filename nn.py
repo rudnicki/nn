@@ -33,7 +33,6 @@ class Neuron:
         self.bweight = bweight
         self.func = func
         #kohonen
-        self.romin = 0.5
         self.ro = 1
 
     def output(self, args):
@@ -63,6 +62,7 @@ class KohonenLayer(Layer):
         self.eta  = 0.1
         self.neig = 0
         self.dim  = dim
+        self.romin = 0.5
 
     def size(self):
         if(self.dim == 1):
@@ -74,7 +74,7 @@ class KohonenLayer(Layer):
     def winner(self, x):
         dists = []
         for n in self.neurons:
-            if n.ro > n.romin:
+            if n.ro > self.romin:
                 dists.append( euk_dist(n.weights, x) )
             else:
                 dists.append( float("inf") )
@@ -97,7 +97,7 @@ class KohonenLayer(Layer):
     def update_ro(self, win_idx):
         for n_idx, n in enumerate(self.neurons):
             if n_idx == win_idx:
-                n.ro = n.ro - n.romin
+                n.ro = n.ro - self.romin
             else:
                 n.ro = min( n.ro + 1.0/len(self.neurons), 1)
         
@@ -135,6 +135,7 @@ class NeuronNetwork():
                 if len(layerDescription) == 4:
                     weights = [ random.uniform(float(layerDescription[2]), float(layerDescription[3]))
                                 for i in range(L.num_inputs) ]
+                    #weights = [0.0 for i in range(L.num_inputs)]
                     #bias
                     if(self.kohonen):
                         bweight = 0.0
