@@ -110,10 +110,9 @@ class KohonenLayer(Layer):
             new_weights = [ wi + self.is_neig(k_idx, n_id) * self.eta * (xi - wi) for xi, wi in zip(x, n.weights) ]
             n.weights   = normalize( new_weights )
         self.update_ro(k_idx)
-
-
+		
 class NeuronNetwork():
-    def __init__(self, filename, kohonen = False):
+    def __init__(self, filename, kohonen=False):
         self.layers = []
         self.kohonen = kohonen
 
@@ -126,10 +125,8 @@ class NeuronNetwork():
             neuronsNums.append( int(layerDescription[0]) )
             activationFun = layerDescription[1]
 
-            if(self.kohonen):
-                L = KohonenLayer()
-            else:
-                L = Layer()
+            L = self.createLayer(i);
+			
             L.num_inputs = neuronsNums[-2]
             for j in range(neuronsNums[-1]):
                 if len(layerDescription) == 4:
@@ -149,6 +146,9 @@ class NeuronNetwork():
             self.addLayer(L)
         f.close()
 
+	def createLayer(self):
+		return Layer();
+		
     def addLayer(self, layer):
         self.layers.append(layer)
 
@@ -178,21 +178,6 @@ class NeuronNetwork():
     
         return self.layers[-1].output
 
-    def learn(self, pattern, epochEtas, iterationsPerEpoch, romin, epochNeigs, dim):
-        kohonenLayer = self.layers[-1]
-        kohonenLayer.dim = dim
-        kohonenLayer.romin = romin
-
-        pattern = map(normalize, pattern)
-        for epochEta, epochNeig in zip(epochEtas, epochNeigs):
-            for i in range(iterationsPerEpoch):
-                kohonenLayer.eta = epochEta
-                kohonenLayer.neig = epochNeig
-                #x = pattern[random.randint(0,len(pattern)-1)]
-                x = pattern[i % len(pattern)]
-                self.output(x)
-                kohonenLayer.learn_step(x)
-
     def save(self, filename):
         f = open(filename, 'w')
         f.write(str(len(self.layers[0].neurons[0].weights)) + " " + str(len(self.layers)))
@@ -208,6 +193,75 @@ class NeuronNetwork():
             f.write("\n")
         f.close()
 		
-    def find_winner(self):
-        return max(enumerate(self.out()), key=operator.itemgetter(1))
+class KohonenNetwork(NeuronNetwork):
+    def __init__(self, filename):
+        NeuronNetwork.__init__(self, filename, True)
+		
+    def createLayer(self, i):
+        return KohonenLayer();
+	
+    def getKohonenLayer(self):
+        return self.layers[-1]
+	
+    def learn(self, pattern, epochEtas, iterationsPerEpoch, romin, epochNeigs, dim):
+        kohonenLayer = self.getKohonenLayer()
+        kohonenLayer.dim = dim
+        kohonenLayer.romin = romin
 
+        pattern = map(normalize, pattern)
+        for epochEta, epochNeig in zip(epochEtas, epochNeigs):
+            for i in range(iterationsPerEpoch):
+                kohonenLayer.eta = epochEta
+                kohonenLayer.neig = epochNeig
+                #x = pattern[random.randint(0,len(pattern)-1)]
+                x = pattern[i % len(pattern)]
+                self.output(x)
+                kohonenLayer.learn_step(x)
+				
+    def find_winner(self):
+        return max(enumerate(self.layers[-1].output), key=operator.itemgetter(1))
+
+class GrossbergLayer(Layer):
+    def __init__(self):
+        Layer.__init__(self)
+
+    def learn_step(self, input, actual_output, target_output, alfa):
+        for i in range(0, len(self.neurons)):
+		    n = self.neurons[i]
+		    diff = target_output[i] - actual_output[i]
+		    new_weights = [w + alfa*(x * diff) for (x, w) in zip(input, n.weights)]
+		    n.weights = new_weights
+            
+
+class CounterPropagationNetwork(KohonenNetwork):
+    def __init__(self, filename):
+        NeuronNetwork.__init__(self, filename, True)
+        self.alfa = 0.3
+		
+    def createLayer(self, i):
+        if i == 0:
+            return KohonenLayer()
+        else:
+            return GrossbergLayer()
+			
+    def getKohonenLayer(self):
+        return self.layers[-2]
+	
+    def getGrossbergLayer(self):
+        return self.layers[-1]
+	
+    def learnCP(self, iterations, classes, pattern, alfa, epochEtas, iterationsPerEpoch, romin, epochNeigs, dim):
+        self.alfa = alfa
+        
+	    #naucz warstwe Kohonena
+        self.learn(pattern, epochEtas, iterationsPerEpoch, romin, epochNeigs, dim)
+		
+        #naucz warstwe Grossberga
+        for i in range(0, iterations):
+            for p in range(0, len(pattern)):
+                x = pattern[p]
+                target_output = classes[p]
+                actual_output = self.output(x, True)
+                input = self.getKohonenLayer().output
+                self.getGrossbergLayer().learn_step(input, actual_output, target_output, self.alfa)
+				

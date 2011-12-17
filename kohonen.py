@@ -19,7 +19,7 @@ pattern = [[0, 0, 1,
             0, 0, 1]
            ] 
 
-NN = NeuronNetwork(sys.argv[1], kohonen = True)
+NN = KohonenNetwork(sys.argv[1])
 
 print "\n<<Initial weights>>"
 NN.show()
@@ -27,7 +27,7 @@ NN.show()
 #learning the pattern
 epochEtas = [0.8, 0.6, 0.4, 0.1]
 epochNeig = [0, 0, 0, 0]
-iterationsPerEpoch = 10
+iterationsPerEpoch = 1000
 roMin = 0.0
 neighbourhoodDim = 1
 NN.learn(pattern, epochEtas, iterationsPerEpoch, roMin, epochNeig, neighbourhoodDim)
