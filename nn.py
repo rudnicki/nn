@@ -8,9 +8,15 @@ import operator
 def linear( total ):
     return total
 
+def linear_derivative( total ):
+    return 1.0
+	
 def sigmoid( total ):
     return 1.0 / ( 1.0 + math.exp(- total) )
 
+def sigmoid_derivative( total ):
+    return sigmoid(total) * (1.0 - sigmoid(total))
+	
 def normalize(vec):
     scale = math.sqrt( sum( [v*v for v in vec] ))
     if scale==0:
@@ -28,10 +34,11 @@ def short(vec):
     
 class Neuron:
     
-    def __init__(self, weights, func=sigmoid, bweight = 0):
+    def __init__(self, weights, func='sigmoid', bweight = 0):
         self.weights = weights
         self.bweight = bweight
-        self.func = func
+        self.func = globals()[func]
+        self.derivative = globals()[func + '_derivative']
         #kohonen
         self.ro = 1
 
@@ -43,9 +50,6 @@ class Neuron:
     def function(self, arg):
         return self.func(arg)
       
-    def setFunction(self, func):
-        self.func = func
-
 
 class Layer:
     def __init__(self):
@@ -142,7 +146,7 @@ class NeuronNetwork():
                 else:
                     weights = [float(x) for x in f.readline().split()]
                     bweight = weights.pop()
-                L.addNeuron(Neuron(weights, globals()[activationFun], bweight))
+                L.addNeuron(Neuron(weights, activationFun, bweight))
             self.addLayer(L)
         f.close()
 
@@ -227,11 +231,11 @@ class GrossbergLayer(Layer):
 
     def learn_step(self, input, actual_output, target_output, alfa):
         for i in range(0, len(self.neurons)):
-		    n = self.neurons[i]
-		    diff = target_output[i] - actual_output[i]
-		    new_weights = [w + alfa*(x * diff) for (x, w) in zip(input, n.weights)]
-		    n.weights = new_weights
-            
+            n = self.neurons[i]
+            diff = target_output[i] - actual_output[i]
+            weighted_sum = sum([inp * w for (inp, w) in zip(input, n.weights)])
+            new_weights = [w + alfa*(x * diff)*n.derivative(weighted_sum) for (x, w) in zip(input, n.weights)]
+            n.weights = new_weights
 
 class CounterPropagationNetwork(KohonenNetwork):
     def __init__(self, filename):
@@ -261,7 +265,29 @@ class CounterPropagationNetwork(KohonenNetwork):
             for p in range(0, len(pattern)):
                 x = pattern[p]
                 target_output = classes[p]
-                actual_output = self.output(x, True)
+                actual_output = self.output(x)
                 input = self.getKohonenLayer().output
                 self.getGrossbergLayer().learn_step(input, actual_output, target_output, self.alfa)
-				
+	
+    def output(self, inputs):
+        if len(inputs) != self.layers[0].num_inputs:
+            raise ValueError, 'wrong number of inputs'
+        
+        inputs = map(normalize, [inputs])[0]
+        outputs = []
+        for n in self.getKohonenLayer().neurons:
+            outputs.append( n.output(inputs) )
+		
+        #w outpucie warstwy kohonena ustawiamy winnera na 1.0, reszta na 0.0		
+        winner_idx, winner = max(enumerate(outputs), key=operator.itemgetter(1))
+        outputs = [0.0] * len(outputs)
+        outputs[winner_idx] = 1.0		
+        self.getKohonenLayer().output = outputs
+		
+        inputs = self.getKohonenLayer().output
+        outputs = []
+        for n in self.getGrossbergLayer().neurons:
+            outputs.append( n.output(inputs) )		
+        self.getGrossbergLayer().output = outputs;
+		
+        return self.layers[-1].output

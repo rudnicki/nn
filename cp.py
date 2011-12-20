@@ -50,7 +50,7 @@ NN.show()
 iterations = 10000
 epochEtas = [0.8, 0.6, 0.4, 0.1]
 epochNeig = [0, 0, 0, 0]
-iterationsPerEpoch = 4000
+iterationsPerEpoch = 500
 roMin = 0.8
 neighbourhoodDim = 1
 alfa = 0.05
@@ -64,6 +64,6 @@ print "\n<<Validate>>"
 print "input_vector", "---->", "output_vector", "---->", "winner id"
 
 for x in pattern:
-    NN.output(x, True)
+    NN.output(x)
     max_idx, max_val = NN.find_winner()
     print short(x), "---->", short(NN.out()), "---->", max_idx
