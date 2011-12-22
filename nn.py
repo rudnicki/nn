@@ -263,8 +263,9 @@ class CounterPropagationNetwork(KohonenNetwork):
         #naucz warstwe Grossberga
         for i in range(0, iterations):
             for p in range(0, len(pattern)):
-                x = pattern[p]
-                target_output = classes[p]
+                pattern_idx = random.randint(0,len(pattern)-1)
+                x = pattern[pattern_idx]
+                target_output = classes[pattern_idx]
                 actual_output = self.output(x)
                 input = self.getKohonenLayer().output
                 self.getGrossbergLayer().learn_step(input, actual_output, target_output, self.alfa)
