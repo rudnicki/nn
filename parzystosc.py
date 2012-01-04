@@ -19,7 +19,7 @@ iterationsPerEpoch = 5000
 roMin = 0.8
 neighbourhoodDim = 1
 alfa = 0.05
-NN.learnCP(iterations, classes, pattern, alfa, epochEtas, iterationsPerEpoch, roMin, epochNeig, neighbourhoodDim)
+NN.learnCP(True, iterations, classes, pattern, alfa, epochEtas, iterationsPerEpoch, roMin, epochNeig, neighbourhoodDim)
 
 print "\n<<Weights after learning>>"
 NN.show()

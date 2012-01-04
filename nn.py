@@ -229,12 +229,15 @@ class GrossbergLayer(Layer):
     def __init__(self):
         Layer.__init__(self)
 
-    def learn_step(self, input, actual_output, target_output, alfa):
+    def learn_step(self, delta_rule, input, actual_output, target_output, alfa):
         for i in range(0, len(self.neurons)):
             n = self.neurons[i]
             diff = target_output[i] - actual_output[i]
             weighted_sum = sum([inp * w for (inp, w) in zip(input, n.weights)])
-            new_weights = [w + alfa*(x * diff)*n.derivative(weighted_sum) for (x, w) in zip(input, n.weights)]
+            if delta_rule:
+                new_weights = [w + alfa*(x * diff)*n.derivative(weighted_sum) for (x, w) in zip(input, n.weights)]
+            else:
+                new_weights = [w + alfa*(x * diff) for (x, w) in zip(input, n.weights)]
             n.weights = new_weights
 
 class CounterPropagationNetwork(KohonenNetwork):
@@ -254,7 +257,7 @@ class CounterPropagationNetwork(KohonenNetwork):
     def getGrossbergLayer(self):
         return self.layers[-1]
 	
-    def learnCP(self, iterations, classes, pattern, alfa, epochEtas, iterationsPerEpoch, romin, epochNeigs, dim):
+    def learnCP(self, delta_rule, iterations, classes, pattern, alfa, epochEtas, iterationsPerEpoch, romin, epochNeigs, dim):
         self.alfa = alfa
         
 	    #naucz warstwe Kohonena
@@ -268,7 +271,7 @@ class CounterPropagationNetwork(KohonenNetwork):
                 target_output = classes[pattern_idx]
                 actual_output = self.output(x)
                 input = self.getKohonenLayer().output
-                self.getGrossbergLayer().learn_step(input, actual_output, target_output, self.alfa)
+                self.getGrossbergLayer().learn_step(delta_rule, input, actual_output, target_output, self.alfa)
 	
     def output(self, inputs):
         if len(inputs) != self.layers[0].num_inputs:
