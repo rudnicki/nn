@@ -38,9 +38,7 @@ class Neuron:
         self.weights = weights
         self.bweight = bweight
         self.func = globals()[func]
-        self.derivative = globals()[func + '_derivative']
-        #kohonen
-        self.ro = 1
+        self.deriv = globals()[func + '_derivative']
 
     def output(self, args):
         total = sum( [ self.weights[i] * args[i] for i in range(len(args)) ] )
@@ -49,7 +47,14 @@ class Neuron:
     
     def function(self, arg):
         return self.func(arg)
-      
+    
+    def derivative(self, arg):
+        return self.deriv(arg)
+
+class KohonenNeuron(Neuron):
+    def __init__(self, weights, func='sigmoid', bweight = 0):
+        Neuron.__init__(self, weights, func, bweight)
+        self.ro = 1
 
 class Layer:
     def __init__(self):
@@ -116,7 +121,7 @@ class KohonenLayer(Layer):
         self.update_ro(k_idx)
 		
 class NeuronNetwork():
-    def __init__(self, filename, kohonen=False):
+    def __init__(self, filename, kohonen=False, Neuron_Type = Neuron):
         self.layers = []
         self.kohonen = kohonen
 
@@ -146,7 +151,7 @@ class NeuronNetwork():
                 else:
                     weights = [float(x) for x in f.readline().split()]
                     bweight = weights.pop()
-                L.addNeuron(Neuron(weights, activationFun, bweight))
+                L.addNeuron(Neuron_Type(weights, activationFun, bweight))
             self.addLayer(L)
         f.close()
 
@@ -199,7 +204,7 @@ class NeuronNetwork():
 		
 class KohonenNetwork(NeuronNetwork):
     def __init__(self, filename):
-        NeuronNetwork.__init__(self, filename, True)
+        NeuronNetwork.__init__(self, filename, True, Neuron_Type = KohonenNeuron)
 		
     def createLayer(self, i):
         return KohonenLayer();
@@ -242,7 +247,7 @@ class GrossbergLayer(Layer):
 
 class CounterPropagationNetwork(KohonenNetwork):
     def __init__(self, filename):
-        NeuronNetwork.__init__(self, filename, True)
+        NeuronNetwork.__init__(self, filename, True, Neuron_Type = KohonenNeuron)
         self.alfa = 0.3
 		
     def createLayer(self, i):
