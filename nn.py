@@ -29,7 +29,7 @@ def euk_dist(u, v):
     return math.sqrt( sum( sub2 ))
 
 def short(vec):
-    nums = ' '.join(["%.2f" % (vi) for vi in vec ])
+    nums = ' '.join(["%5.2f" % (vi) for vi in vec ])
     return "[" + nums + "]"
     
 class Neuron:
@@ -147,7 +147,8 @@ class NeuronNetwork():
                         bweight = 0.0
                         weigths = normalize(weights)
                     else:
-                        bweigth = random.uniform(float(layerDescription[2]), float(layerDescription[3]))
+                        bweight = random.uniform(float(layerDescription[2]), float(layerDescription[3]))
+
                 else:
                     weights = [float(x) for x in f.readline().split()]
                     bweight = weights.pop()
@@ -155,8 +156,8 @@ class NeuronNetwork():
             self.addLayer(L)
         f.close()
 
-	def createLayer(self):
-		return Layer();
+	def createLayer(self, i):
+            return Layer();
 		
     def addLayer(self, layer):
         self.layers.append(layer)
