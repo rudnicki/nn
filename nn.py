@@ -56,6 +56,21 @@ class KohonenNeuron(Neuron):
         Neuron.__init__(self, weights, func, bweight)
         self.ro = 1
 
+class BPNeuron(Neuron):
+    def __init__(self, weights, func='sigmoid', bweight = 0):
+        Neuron.__init__(self, weights, func, bweight)
+        self.delta = 0.0
+        self.change = [0.0] * len(weights)
+
+    def output(self, args):
+        self.args = args
+        return Neuron.output(self, args)
+
+    def total(self, args):
+        total = sum( [ self.weights[i] * args[i] for i in range(len(args)) ] )
+        total += (-1) * self.bweight
+        return total
+        
 class Layer:
     def __init__(self):
         self.neurons = []
@@ -301,3 +316,69 @@ class CounterPropagationNetwork(KohonenNetwork):
         self.getGrossbergLayer().output = outputs;
 		
         return self.layers[-1].output
+
+
+class BackPropagationNetwork(NeuronNetwork):
+    def __init__(self, filename, with_bias=False, Neuron_Type = BPNeuron):
+        NeuronNetwork.__init__(self, filename, kohonen=not with_bias, Neuron_Type=Neuron_Type)
+        self.N = 0.5 # learning rate
+        self.M = 0.1 # momentum factor
+
+    def createLayer(self,i):
+        return Layer()
+
+    def backPropagate(self, target_vec, N, M):
+        if len(target_vec) != len(self.layers[-1].output):
+            raise ValueError('wrong number of target values')
+
+        # clear all neurons deltas
+        for layer in self.layers:
+            for neuron in layer.neurons:
+                neuron.delta = 0.0
+
+        # output layer
+        layer = self.layers[-1]
+        delta = map(operator.sub, target_vec, layer.output)
+        for d, n in zip(delta,layer.neurons):
+            n.delta = d                    
+                
+        # hidden layers
+        # calculate delta (error)
+        for lid in range(len(self.layers), 1, -1): # downto 1 ??
+            layer      = self.layers[lid]
+            prev_layer = self.layers[lid-1]
+            for n in layer.neurons:
+                for wid, w in enumerate(n.weights):
+                    prev_layer.neurons[wid].delta += w * n.delta
+
+        # update weights
+        for lid in range(len(self.layers)):
+            layer = self.layers[lid]
+            for n in layer.neurons:
+                deriv = n.derivative(n.total(n.args))
+                for wid, w in enumerate(n.weights):
+                    change = n.delta * deriv * n.args[wid]
+                    #Uncomment for momentum
+                    n.weights[wid] = w + N * change #+ M * n.change[wid]
+                    n.change[wid] = change
+                n.weights = normalize( n.weights ) # NORMALIZE ???
+        # calculate error
+        error = 0.0
+        for k in range(len(target_vec)):                
+            error = error + 0.5*(target_vec[k]-self.layers[-1].output[k])**2
+
+        return error
+
+    def learnBP(self, patterns, targets, iterations=1000):
+        for i in range(iterations):
+            error = 0.0
+            patterns = map(normalize, patterns)
+            targets  = map(normalize, targets)
+            for pattern, target in zip(patterns, targets):
+                output = self.output( pattern )
+                error = error + self.backPropagate(target, self.N, self.M)
+            if i % 100 == 0:
+                print('error %-.5f' % error)
+
+
+	
