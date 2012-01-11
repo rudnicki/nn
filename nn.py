@@ -40,10 +40,13 @@ class Neuron:
         self.func = globals()[func]
         self.deriv = globals()[func + '_derivative']
 
-    def output(self, args):
+    def sum(self, args):
         total = sum( [ self.weights[i] * args[i] for i in range(len(args)) ] )
-        total += (-1) * self.bweight
-        return self.function(total)
+        total += 1 * self.bweight
+        return total
+    
+    def output(self, args):
+        return self.function( self.sum(args) )
     
     def function(self, arg):
         return self.func(arg)
@@ -67,11 +70,6 @@ class BPNeuron(Neuron):
     def output(self, args):
         self.args = args
         return Neuron.output(self, args)
-
-    def total(self, args):
-        total = sum( [ self.weights[i] * args[i] for i in range(len(args)) ] )
-        total += (-1) * self.bweight
-        return total
         
 class Layer:
     def __init__(self):
@@ -364,7 +362,7 @@ class BackPropagationNetwork(NeuronNetwork):
         for lid in range(len(self.layers)):
             layer = self.layers[lid]
             for n in layer.neurons:
-                deriv = n.derivative(n.total(n.args))
+                deriv = n.derivative(n.sum(n.args))
                 for wid, w in enumerate(n.weights):
                     change = n.delta * deriv * n.args[wid]
                     #Uncomment for momentum
