@@ -344,7 +344,7 @@ class BackPropagationNetwork(NeuronNetwork):
                 
         # hidden layers
         # calculate delta (error)
-        for lid in range(len(self.layers), 1, -1): # downto 1 ??
+        for lid in range(len(self.layers)-1, 0, -1): # downto 1 ??
             layer      = self.layers[lid]
             prev_layer = self.layers[lid-1]
             for n in layer.neurons:
