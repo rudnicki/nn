@@ -59,8 +59,10 @@ class KohonenNeuron(Neuron):
 class BPNeuron(Neuron):
     def __init__(self, weights, func='sigmoid', bweight = 0):
         Neuron.__init__(self, weights, func, bweight)
-        self.delta = 0.0
+        self.delta  = 0.0
+        self.bdelta = 0.0
         self.change = [0.0] * len(weights)
+        self.bchange = 0.0
 
     def output(self, args):
         self.args = args
@@ -319,7 +321,7 @@ class CounterPropagationNetwork(KohonenNetwork):
 
 
 class BackPropagationNetwork(NeuronNetwork):
-    def __init__(self, filename, with_bias=False, Neuron_Type = BPNeuron):
+    def __init__(self, filename, with_bias=True, Neuron_Type = BPNeuron):
         NeuronNetwork.__init__(self, filename, kohonen=not with_bias, Neuron_Type=Neuron_Type)
         self.N = 0.5 # learning rate
         self.M = 0.1 # momentum factor
@@ -334,7 +336,8 @@ class BackPropagationNetwork(NeuronNetwork):
         # clear all neurons deltas
         for layer in self.layers:
             for neuron in layer.neurons:
-                neuron.delta = 0.0
+                neuron.delta  = 0.0
+                neuron.bdelta = 0.0
 
         # output layer
         layer = self.layers[-1]
@@ -350,6 +353,12 @@ class BackPropagationNetwork(NeuronNetwork):
             for n in layer.neurons:
                 for wid, w in enumerate(n.weights):
                     prev_layer.neurons[wid].delta += w * n.delta
+                    
+        # bias delta (error)
+        for lid in range(len(self.layers)):
+            layer = self.layers[lid]
+            for n in layer.neurons:
+                n.bdelta  = n.bweight * n.delta
 
         # update weights
         for lid in range(len(self.layers)):
@@ -361,7 +370,16 @@ class BackPropagationNetwork(NeuronNetwork):
                     #Uncomment for momentum
                     n.weights[wid] = w + N * change #+ M * n.change[wid]
                     n.change[wid] = change
-                n.weights = normalize( n.weights ) # NORMALIZE ???
+                # bias update
+                change = n.bdelta * deriv * 1 # magiczny czynnik ;)
+                n.bweight = n.bweight + N * change #+ M * n.bchange
+                n.bchange = change
+                
+                #normalize with bias
+                normalized = normalize( n.weights + [n.bweight] )                
+                n.bweight  = normalized.pop()
+                n.weights  = normalized
+
         # calculate error
         error = 0.0
         for k in range(len(target_vec)):                
