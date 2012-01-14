@@ -319,10 +319,10 @@ class CounterPropagationNetwork(KohonenNetwork):
 
 
 class BackPropagationNetwork(NeuronNetwork):
-    def __init__(self, filename, with_bias=True, Neuron_Type = BPNeuron):
+    def __init__(self, filename, with_bias=True, Neuron_Type = BPNeuron, N = 0.5, M = 0.1):
         NeuronNetwork.__init__(self, filename, kohonen=not with_bias, Neuron_Type=Neuron_Type)
-        self.N = 0.5 # learning rate
-        self.M = 0.1 # momentum factor
+        self.N = N # learning rate
+        self.M = M # momentum factor
 
     def createLayer(self,i):
         return Layer()
