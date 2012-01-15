@@ -12,10 +12,10 @@ def linear_derivative( total ):
     return 1.0
 	
 def sigmoid( total ):
-    return 1.0 / ( 1.0 + math.exp(- total) )
+    return math.tanh(total)
 
 def sigmoid_derivative( total ):
-    return sigmoid(total) * (1.0 - sigmoid(total))
+    return 1.0 - total**2
 	
 def normalize(vec):
     scale = math.sqrt( sum( [v*v for v in vec] ))
@@ -46,7 +46,8 @@ class Neuron:
         return total
     
     def output(self, args):
-        return self.function( self.sum(args) )
+        self.out = self.function( self.sum(args) )
+        return self.out
     
     def function(self, arg):
         return self.func(arg)
@@ -66,6 +67,7 @@ class BPNeuron(Neuron):
         self.bdelta = 0.0
         self.change = [0.0] * len(weights)
         self.bchange = 0.0
+        self.momentum = [0.0] * len(weights)
 
     def output(self, args):
         self.args = args
@@ -323,60 +325,39 @@ class BackPropagationNetwork(NeuronNetwork):
         NeuronNetwork.__init__(self, filename, kohonen=not with_bias, Neuron_Type=Neuron_Type)
         self.N = N # learning rate
         self.M = M # momentum factor
+        self.with_bias=with_bias
 
     def createLayer(self,i):
         return Layer()
 
-    def backPropagate(self, target_vec, N, M):
+    def backPropagate(self, input_vec, target_vec, N, M):
         if len(target_vec) != len(self.layers[-1].output):
             raise ValueError('wrong number of target values')
 
-        # clear all neurons deltas
-        for layer in self.layers:
-            for neuron in layer.neurons:
-                neuron.delta  = 0.0
-                neuron.bdelta = 0.0
-
-        # output layer
-        layer = self.layers[-1]
-        delta = map(operator.sub, target_vec, layer.output)
-        for d, n in zip(delta,layer.neurons):
-            n.delta = d                    
-                
-        # hidden layers
-        # calculate delta (error)
-        for lid in range(len(self.layers)-1, 0, -1): # downto 1 ??
-            layer      = self.layers[lid]
-            prev_layer = self.layers[lid-1]
-            for n in layer.neurons:
-                for wid, w in enumerate(n.weights):
-                    prev_layer.neurons[wid].delta += w * n.delta
-                    
-        # bias delta (error)
-        for lid in range(len(self.layers)):
-            layer = self.layers[lid]
-            for n in layer.neurons:
-                n.bdelta  = n.bweight * n.delta
-
+		# output layer delta
+        for nid, n in enumerate(self.layers[-1].neurons):
+			error = target_vec[nid] - n.out
+			n.delta = n.derivative(n.out) * error
+        
+		#hidden layers delta
+        for lid in range(len(self.layers)-1, 0, -1):
+            layer = self.layers[lid-1]
+            nextLayer = self.layers[lid]
+            for pid, p in enumerate(layer.neurons):
+                error = 0.0
+                for nid, n in enumerate(nextLayer.neurons):
+                    error += n.delta * n.weights[pid]
+                p.delta = p.derivative(p.out) * error
+				
         # update weights
-        for lid in range(len(self.layers)):
-            layer = self.layers[lid]
-            for n in layer.neurons:
-                deriv = n.derivative(n.sum(n.args))
+        for layer in self.layers:
+            for nid, n in enumerate(layer.neurons):
                 for wid, w in enumerate(n.weights):
-                    change = n.delta * deriv * n.args[wid]
-                    #Uncomment for momentum
-                    n.weights[wid] = w + N * change #+ M * n.change[wid]
-                    n.change[wid] = change
-                # bias update
-                change = n.bdelta * deriv * 1 # magiczny czynnik ;)
-                n.bweight = n.bweight + N * change #+ M * n.bchange
-                n.bchange = change
-                
-                #normalize with bias
-                normalized = normalize( n.weights + [n.bweight] )                
-                n.bweight  = normalized.pop()
-                n.weights  = normalized
+                    change = n.args[wid] * n.delta
+                    n.weights[wid] += N*change + M*n.momentum[wid]
+                    n.momentum[wid] = change
+                if(self.with_bias):
+				    n.bweight += N * 1.0 * n.delta
 
         # calculate error
         error = 0.0
@@ -388,13 +369,9 @@ class BackPropagationNetwork(NeuronNetwork):
     def learnBP(self, patterns, targets, iterations=1000):
         for i in range(iterations):
             error = 0.0
-            patterns = map(normalize, patterns)
-            targets  = map(normalize, targets)
+
             for pattern, target in zip(patterns, targets):
                 output = self.output( pattern )
-                error = error + self.backPropagate(target, self.N, self.M)
+                error = error + self.backPropagate(pattern, target, self.N, self.M)
             if i % 100 == 0:
                 print('error %-.5f' % error)
-
-
-	
