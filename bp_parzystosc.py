@@ -6,13 +6,13 @@ pattern = [[0,0,0], [0,1,0], [0,0,1], [0,1,1], [1,0,0], [1,0,1], [1,1,0], [1,1,1
 
 classes = [[1], [0], [0], [1], [0], [1], [1], [0]]
 
-NN = BackPropagationNetwork(sys.argv[1], M=0.2, N=0.5, with_bias=True)
+NN = BackPropagationNetwork(sys.argv[1], M=0.0, N=0.1, with_bias=True)
 
 print "\n<<Initial weights>>"
 NN.show()
 
 #learning the pattern
-NN.learnBP(pattern, classes, iterations = 10000)
+NN.learnBP(pattern, classes, iterations = 30000)
 
 print "\n<<Weights after learning>>"
 NN.show()

@@ -14,7 +14,7 @@ classes = [[0],
 		   [0]
           ]
 
-NN = BackPropagationNetwork(sys.argv[1], M=0.5, N=0.2, with_bias=True)
+NN = BackPropagationNetwork(sys.argv[1], M=0.2, N=0.2, with_bias=True)
 
 print "\n<<Initial weights>>"
 NN.show()
