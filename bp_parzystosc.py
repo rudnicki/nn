@@ -24,4 +24,4 @@ print "input_vector", "---->", "output_vector", "---->", "winner id"
 for x in pattern:
     output = NN.output(x)
     max_idx, max_val = max(enumerate(output), key=operator.itemgetter(1))
-    print short(x), "---->", short(NN.out()), "---->", max_idx
+    print short(x), "---->", short(NN.out()), "---->", abs(round(max_val))

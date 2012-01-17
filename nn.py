@@ -65,8 +65,6 @@ class BPNeuron(Neuron):
         Neuron.__init__(self, weights, func, bweight)
         self.delta  = 0.0
         self.bdelta = 0.0
-        self.change = [0.0] * len(weights)
-        self.bchange = 0.0
         self.momentum = [0.0] * len(weights)
 
     def output(self, args):
@@ -356,8 +354,8 @@ class BackPropagationNetwork(NeuronNetwork):
                     change = n.args[wid] * n.delta
                     n.weights[wid] += N*change + M*n.momentum[wid]
                     n.momentum[wid] = change
-                if(self.with_bias):
-				    n.bweight += N * 1.0 * n.delta
+                if(self.with_bias):                    
+                    n.bweight += N * 1.0 * n.delta
 
         # calculate error
         error = 0.0
